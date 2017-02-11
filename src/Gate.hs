@@ -26,3 +26,9 @@ or' x =
         b = (-0.2)
         tmp = (x <.> w) + b
     in if tmp > 0 then 1 else 0
+
+xor :: Num t => Vector R -> t
+xor x =
+    let s1 = nand x
+        s2 = or' x
+    in and'' $ vector [s1, s2]
