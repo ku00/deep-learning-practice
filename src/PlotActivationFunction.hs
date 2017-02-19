@@ -2,7 +2,7 @@ import Graphics.Rendering.Chart.Easy
 import Graphics.Rendering.Chart.Backend.Diagrams(toFile)
 
 import ActivationFunction
-import Numeric.LinearAlgebra.Data
+import Numeric.LinearAlgebra.Data(vector, toList)
 
 main = toFile def "activation_function.svg" $ do
     layout_title .= "activation function"
