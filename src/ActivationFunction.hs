@@ -6,11 +6,11 @@ module ActivationFunction
 
 import Numeric.LinearAlgebra
 
-step' :: Vector R -> Vector R
+step' :: (Element b, Container c a, Ord a, Num a, Num b) => c a -> c b
 step' = cmap (\x -> if x>0 then 1 else 0)
 
-sigmoid :: Vector R -> Vector R
+sigmoid :: (Container c b, Floating b) => c b -> c b
 sigmoid = cmap (\x -> 1 / (1 + exp(-x)))
 
-relu :: Vector R -> Vector R
+relu :: (Container c b, Ord b, Num b) => c b -> c b
 relu = cmap (max 0)
