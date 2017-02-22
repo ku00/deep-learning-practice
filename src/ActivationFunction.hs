@@ -2,7 +2,7 @@ module ActivationFunction
     ( step'
     , sigmoid
     , relu
-    , softMax
+    , softMax'
     ) where
 
 import Numeric.LinearAlgebra
@@ -16,7 +16,17 @@ sigmoid = cmap (\x -> 1 / (1 + exp(-x)))
 relu :: (Container c b, Ord b, Num b) => c b -> c b
 relu = cmap (max 0)
 
+-- This function is deprecated, causes overflow.
 softMax :: (Container c b, Floating b) => c b -> c b
-softMax x = cmap (/sumCExp) cExp
-    where cExp    = cmap exp x
-          sumCExp = sumElements $ cExp
+softMax xs = cmap (/sumCexp) $ cexp xs
+    where sumCexp = (sumElements . cexp) xs
+
+softMax' :: (Container c b, Floating b) => c b -> c b
+softMax' xs = cmap (/sumCexp) $ cexp' xs
+    where sumCexp = (sumElements . cexp') xs
+
+cexp :: (Container c b, Floating b) => c b -> c b
+cexp = cmap exp
+
+cexp' :: (Container c b, Floating b) => c b -> c b
+cexp' xs = cexp $ cmap (subtract $ maxElement xs) xs
