@@ -1,0 +1,3 @@
+import Mnist
+
+main = initMnist
