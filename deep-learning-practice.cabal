@@ -22,6 +22,7 @@ library
                      , http-conduit
                      , directory
                      , bytestring
+                     , zlib
   default-language:    Haskell2010
 
 executable deep-learning-practice-exe
