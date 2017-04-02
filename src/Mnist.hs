@@ -1,13 +1,14 @@
 module Mnist
     ( initMnist
     , loadImg
+    , loadLabel
     ) where
 
 import Numeric.LinearAlgebra
 import Network.HTTP.Simple ( parseRequest, httpLBS, getResponseBody )
 import System.Directory ( doesFileExist )
 import Control.Monad ( unless, mapM_ )
-import qualified Data.ByteString.Lazy as BL (unpack, drop, writeFile, readFile)
+import qualified Data.ByteString.Lazy as BL
 import qualified Codec.Compression.GZip as GZ ( decompress )
 
 type DataSet = (Matrix R, Matrix R)
@@ -43,16 +44,18 @@ downloadMnist (x:xs) = do
     download $ snd x
     downloadMnist xs
 
+toDoubleList :: BL.ByteString -> [Double]
+toDoubleList = map (read . show . fromEnum) . BL.unpack
+
+loadLabel :: String -> IO (Matrix R)
+loadLabel fileName = do
+    contents <- fmap GZ.decompress (BL.readFile $ generatePath fileName)
+    return . matrix 1 . toDoubleList $ BL.drop 8 contents
+
 loadImg :: String -> IO (Matrix R)
 loadImg fileName = do
-    let loadPath = generatePath fileName
-
-    putStrLn $ "Converting " ++ fileName ++ " to Matrix ..."
-    contents <- fmap GZ.decompress (BL.readFile loadPath)
-    putStrLn "Done"
-
-    let unpackData = map (read . show . fromEnum) $ BL.unpack $ BL.drop 16 contents
-    return $ matrix imgSize unpackData
+    contents <- fmap GZ.decompress (BL.readFile $ generatePath fileName)
+    return . matrix imgSize . toDoubleList $ BL.drop 16 contents
 
 initMnist :: IO ()
 initMnist = downloadMnist keyFiles
