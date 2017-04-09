@@ -1,3 +1,6 @@
 import Mnist
+import Numeric.LinearAlgebra
 
-main = putStrLn =<< loadMnist
+main = do
+    ds <- loadMnist False
+    print $ takeRows 1 $ fst $ head ds

@@ -2,11 +2,11 @@ module Mnist
     ( loadMnist
     ) where
 
+import Control.Monad
 import Numeric.LinearAlgebra
 import Network.HTTP.Simple (parseRequest, httpLBS, getResponseBody)
 import System.Directory (doesFileExist)
-import Control.Monad
-import qualified Data.ByteString.Lazy as BL (readFile, writeFile, drop)
+import qualified Data.ByteString.Lazy as BL
 import qualified Codec.Compression.GZip as GZ (compress, decompress)
 import Data.Binary (encode, decode)
 
@@ -77,15 +77,20 @@ initMnist = do
     BL.writeFile savePath $ (GZ.compress . encode) ds
     putStrLn "Done"
 
+normalizeImg :: Bool -> [DataSet] -> IO [DataSet]
+normalizeImg f ds@[train, test]
+    | f         = return [ ((/255) $ fst train, snd train), ((/255) $ fst test, snd test) ]
+    | otherwise = return ds
+
 loadPickle :: String -> IO [DataSet]
 loadPickle p = do
     encodeDs <- BL.readFile p
     return $ (decode . GZ.decompress) encodeDs
 
-loadMnist :: IO [DataSet]
-loadMnist = do
+loadMnist :: Bool -> IO [DataSet]
+loadMnist normalize = do
     let loadPath = generatePath pickleFile
     e <- doesFileExist loadPath
-    unless e $ initMnist
+    unless e initMnist
 
-    loadPickle loadPath
+    loadPickle loadPath >>= normalizeImg normalize
