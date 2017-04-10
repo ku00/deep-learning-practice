@@ -1,6 +1,8 @@
 import Mnist
+import SampleWeight
 import Numeric.LinearAlgebra
 
 main = do
-    ds <- loadMnist False
-    print $ takeRows 1 $ fst $ head ds
+    sw <- loadSW
+    print $ sw !! 3
+    putStrLn "Done"
