@@ -12,7 +12,7 @@ import Data.Binary (encode, decode)
 
 type DataSet = (Matrix R, Matrix R)
 
-urlBase = "http://yann.lecun.com/exdb/mnist"
+baseUrl = "http://yann.lecun.com/exdb/mnist"
 keyFiles = [
             ("train_img", "train-images-idx3-ubyte.gz"),
             ("train_label", "train-labels-idx1-ubyte.gz"),
@@ -20,12 +20,12 @@ keyFiles = [
             ("test_label", "t10k-labels-idx1-ubyte.gz")
           ]
 
-dataSetDir = "assets"
+assetsDir = "assets"
 pickleFile = "mnist.dat"
 imgSize = 784
 
 generatePath :: String -> String
-generatePath p = dataSetDir ++ "/" ++ p
+generatePath p = assetsDir ++ "/" ++ p
 
 download :: String -> IO ()
 download fileName = do
@@ -34,7 +34,7 @@ download fileName = do
     e <- doesFileExist savePath
     unless e $ do
       putStrLn $ "Downloading " ++ fileName ++ " ..."
-      res <- httpLBS =<< parseRequest (urlBase ++ "/" ++ fileName)
+      res <- httpLBS =<< parseRequest (baseUrl ++ "/" ++ fileName)
       BL.writeFile savePath (getResponseBody res)
       putStrLn "Done"
 
@@ -59,33 +59,32 @@ loadImg fileName = do
 
 toMatrix :: IO [DataSet]
 toMatrix = do
-    putStrLn "Converting to Matrix ..."
     trainImg <- loadImg . snd $ keyFiles !! 0
     trainLabel <- loadLabel . snd $ keyFiles !! 1
     testImg <- loadImg . snd $ keyFiles !! 2
     testLabel <- loadLabel . snd $ keyFiles !! 3
-    putStrLn "Done"
 
     return [(trainImg, trainLabel), (testImg, testLabel)]
+
+createPickle :: String -> [DataSet] -> IO ()
+createPickle p ds = BL.writeFile p $ (GZ.compress . encode) ds
+
+loadPickle :: String -> IO [DataSet]
+loadPickle p = do
+    encodeDs <- BL.readFile p
+    return $ (decode . GZ.decompress) encodeDs
 
 initMnist :: IO ()
 initMnist = do
     downloadMnist keyFiles
-    ds <- toMatrix
     putStrLn "Creating binary Matrix file ..."
-    let savePath = generatePath pickleFile
-    BL.writeFile savePath $ (GZ.compress . encode) ds
+    createPickle (generatePath pickleFile) =<< toMatrix
     putStrLn "Done"
 
 normalizeImg :: Bool -> [DataSet] -> IO [DataSet]
 normalizeImg f ds@[train, test]
     | f         = return [ ((/255) $ fst train, snd train), ((/255) $ fst test, snd test) ]
     | otherwise = return ds
-
-loadPickle :: String -> IO [DataSet]
-loadPickle p = do
-    encodeDs <- BL.readFile p
-    return $ (decode . GZ.decompress) encodeDs
 
 loadMnist :: Bool -> IO [DataSet]
 loadMnist normalize = do
