@@ -59,10 +59,10 @@ loadImg fileName = do
 
 toMatrix :: IO [DataSet]
 toMatrix = do
-    trainImg <- loadImg . snd $ keyFiles !! 0
-    trainLabel <- loadLabel . snd $ keyFiles !! 1
-    testImg <- loadImg . snd $ keyFiles !! 2
-    testLabel <- loadLabel . snd $ keyFiles !! 3
+    trainImg <- loadImg . snd . head $ keyFiles
+    trainLabel <- loadLabel . snd . (!!1) $ keyFiles
+    testImg <- loadImg . snd . (!!2) $ keyFiles
+    testLabel <- loadLabel . snd . (!!3) $ keyFiles
 
     return [(trainImg, trainLabel), (testImg, testLabel)]
 
