@@ -32,7 +32,7 @@ createBinary p = do
       Left e -> print e
       Right w -> do
         putStrLn $ "Creating binary Matrix file: " ++ basePath
-        let wm = fromLists $ map (read :: String -> Double) <$> w
+        let wm = fromLists $ fmap (read :: String -> Double) <$> w
         createPickle (basePath ++ ".dat") wm
         putStrLn "Done"
 
@@ -55,5 +55,8 @@ loadPickle p = do
     encodeSW <- BL.readFile $ generatePath p ++ ".dat"
     return $ (decode . GZ.decompress) encodeSW
 
-loadSW :: IO [Matrix R]
-loadSW = forM weightFiles loadPickle
+loadSW :: IO ([Matrix R], [Vector R])
+loadSW = do
+    sw <- forM weightFiles loadPickle
+    let (w,b) = splitAt 3 sw
+    return (w, fmap flatten b)
