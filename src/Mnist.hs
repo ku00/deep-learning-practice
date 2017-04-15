@@ -10,7 +10,7 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Codec.Compression.GZip as GZ (compress, decompress)
 import Data.Binary (encode, decode)
 
-type DataSet = (Matrix R, Matrix R)
+type DataSet = (Matrix R, Vector R)
 
 baseUrl = "http://yann.lecun.com/exdb/mnist"
 keyFiles = [
@@ -47,18 +47,18 @@ downloadMnist (x:xs) = do
 toDoubleList :: BL.ByteString -> [Double]
 toDoubleList = map (read . show . fromEnum) . BL.unpack
 
-loadLabel :: String -> IO (Matrix R)
+loadLabel :: String -> IO (Vector R)
 loadLabel fileName = do
     contents <- fmap GZ.decompress (BL.readFile $ generatePath fileName)
-    return . matrix 1 . toDoubleList $ BL.drop 8 contents
+    return . vector . toDoubleList $ BL.drop 8 contents
 
 loadImg :: String -> IO (Matrix R)
 loadImg fileName = do
     contents <- fmap GZ.decompress (BL.readFile $ generatePath fileName)
     return . matrix imgSize . toDoubleList $ BL.drop 16 contents
 
-toMatrix :: IO [DataSet]
-toMatrix = do
+convertDataset :: IO [DataSet]
+convertDataset = do
     trainImg <- loadImg . snd . head $ keyFiles
     trainLabel <- loadLabel . snd . (!!1) $ keyFiles
     testImg <- loadImg . snd . (!!2) $ keyFiles
@@ -77,8 +77,8 @@ loadPickle p = do
 initMnist :: IO ()
 initMnist = do
     downloadMnist keyFiles
-    putStrLn "Creating binary Matrix file ..."
-    createPickle (generatePath pickleFile) =<< toMatrix
+    putStrLn "Creating binary DataSet file ..."
+    createPickle (generatePath pickleFile) =<< convertDataset
     putStrLn "Done"
 
 normalizeImg :: Bool -> [DataSet] -> IO [DataSet]

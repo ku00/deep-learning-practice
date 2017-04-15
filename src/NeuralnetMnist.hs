@@ -24,6 +24,6 @@ countAccuracy a n sw i l
 main = do
     [_, (img, label)] <- loadMnist True
     sw <- loadSW
-    let cnt = countAccuracy 0 (rows img) sw img (flatten label)
+    let cnt = countAccuracy 0 (rows img) sw img label
 
     putStrLn $ "Accuracy: " ++ show (cnt / fromIntegral (rows img))
