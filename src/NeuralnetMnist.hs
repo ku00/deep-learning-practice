@@ -1,4 +1,3 @@
-import Control.Monad
 import Numeric.LinearAlgebra
 import ActivationFunction
 import Mnist
@@ -11,20 +10,20 @@ predict ([w1,w2,w3],[b1,b2,b3]) x =
 sumInput :: Vector R -> Weight -> Bias -> Vector R
 sumInput x w b = (x <# w) + b
 
-maxIndexPredict :: SampleWeight -> Image -> Int -> Double
-maxIndexPredict sw i n = fromIntegral . maxIndex $ predict sw (i ! n)
+maxIndexPredict :: SampleWeight -> Vector R -> Double
+maxIndexPredict sw x = fromIntegral . maxIndex $ predict sw x
 
 countAccuracy :: Double -> Int -> SampleWeight -> Image -> Label -> Double
 countAccuracy a n sw i l
     | n <= 0    = a
     | otherwise =
-      if maxIndexPredict sw i (n-1) == l ! (n-1)
+      if maxIndexPredict sw (i ! (n-1)) == l ! (n-1)
         then countAccuracy (a+1) (n-1) sw i l
         else countAccuracy a (n-1) sw i l
 
 main = do
-    [_, (img, label)] <- loadMnist True
+    [_, (i, l)] <- loadMnist True
     sw <- loadSW
-    let cnt = countAccuracy 0 (rows img) sw img label
+    let cnt = countAccuracy 0 (rows i) sw i l
 
-    putStrLn $ "Accuracy: " ++ show (cnt / fromIntegral (rows img))
+    putStrLn $ "Accuracy: " ++ show (cnt / fromIntegral (rows i))

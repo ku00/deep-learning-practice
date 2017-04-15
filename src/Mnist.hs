@@ -33,14 +33,14 @@ generatePath :: String -> String
 generatePath p = assetsDir ++ "/" ++ p
 
 download :: String -> IO ()
-download fileName = do
-    let savePath = generatePath fileName
+download fn = do
+    let p = generatePath fn
 
-    e <- doesFileExist savePath
+    e <- doesFileExist p
     unless e $ do
-      putStrLn $ "Downloading " ++ fileName ++ " ..."
-      res <- httpLBS =<< parseRequest (baseUrl ++ "/" ++ fileName)
-      BL.writeFile savePath (getResponseBody res)
+      putStrLn $ "Downloading " ++ fn ++ " ..."
+      res <- httpLBS =<< parseRequest (baseUrl ++ "/" ++ fn)
+      BL.writeFile p (getResponseBody res)
       putStrLn "Done"
 
 downloadMnist :: [(String, String)] -> IO ()
@@ -53,31 +53,31 @@ toDoubleList :: BL.ByteString -> [Double]
 toDoubleList = fmap (read . show . fromEnum) . BL.unpack
 
 loadLabel :: String -> IO Label
-loadLabel fileName = do
-    contents <- fmap GZ.decompress (BL.readFile $ generatePath fileName)
-    return . vector . toDoubleList $ BL.drop 8 contents
+loadLabel fn = do
+    c <- fmap GZ.decompress (BL.readFile $ generatePath fn)
+    return . vector . toDoubleList $ BL.drop 8 c
 
 loadImg :: String -> IO Image
-loadImg fileName = do
-    contents <- fmap GZ.decompress (BL.readFile $ generatePath fileName)
-    return . matrix imgSize . toDoubleList $ BL.drop 16 contents
+loadImg fn = do
+    c <- fmap GZ.decompress (BL.readFile $ generatePath fn)
+    return . matrix imgSize . toDoubleList $ BL.drop 16 c
 
 convertDataset :: IO [DataSet]
 convertDataset = do
-    trainImg <- loadImg . snd . head $ keyFiles
-    trainLabel <- loadLabel . snd . (!!1) $ keyFiles
-    testImg <- loadImg . snd . (!!2) $ keyFiles
-    testLabel <- loadLabel . snd . (!!3) $ keyFiles
+    tri <- loadImg . snd . head $ keyFiles
+    trl <- loadLabel . snd . (!!1) $ keyFiles
+    ti <- loadImg . snd . (!!2) $ keyFiles
+    tl <- loadLabel . snd . (!!3) $ keyFiles
 
-    return [(trainImg, trainLabel), (testImg, testLabel)]
+    return [(tri, trl), (ti, tl)]
 
 createPickle :: String -> [DataSet] -> IO ()
 createPickle p ds = BL.writeFile p $ (GZ.compress . encode) ds
 
 loadPickle :: String -> IO [DataSet]
 loadPickle p = do
-    encodeDs <- BL.readFile p
-    return $ (decode . GZ.decompress) encodeDs
+    eds <- BL.readFile p
+    return $ (decode . GZ.decompress) eds
 
 initMnist :: IO ()
 initMnist = do
@@ -87,14 +87,14 @@ initMnist = do
     putStrLn "Done"
 
 normalizeImg :: Bool -> [DataSet] -> IO [DataSet]
-normalizeImg f ds@[train, test]
-    | f         = return [ ((/255) $ fst train, snd train), ((/255) $ fst test, snd test) ]
+normalizeImg f ds@[tr, t]
+    | f         = return [ ((/255) $ fst tr, snd tr), ((/255) $ fst t, snd t) ]
     | otherwise = return ds
 
 loadMnist :: Bool -> IO [DataSet]
-loadMnist normalize = do
-    let loadPath = generatePath pickleFile
-    e <- doesFileExist loadPath
+loadMnist nml = do
+    let p = generatePath pickleFile
+    e <- doesFileExist p
     unless e initMnist
 
-    loadPickle loadPath >>= normalizeImg normalize
+    loadPickle p >>= normalizeImg nml

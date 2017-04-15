@@ -32,15 +32,15 @@ generatePath p = assetsDir ++ "/" ++ p
 
 createBinary :: String -> IO ()
 createBinary p = do
-    let basePath = generatePath p
+    let bp = generatePath p
 
-    ws <- readFile $ basePath ++ ".csv"
+    ws <- readFile $ bp ++ ".csv"
     case parseCSV ws of
       Left e -> print e
       Right w -> do
-        putStrLn $ "Creating binary Matrix file: " ++ basePath
+        putStrLn $ "Creating binary Matrix file: " ++ bp
         let wm = fromLists $ fmap (read :: String -> Double) <$> w
-        createPickle (basePath ++ ".dat") wm
+        createPickle (bp ++ ".dat") wm
         putStrLn "Done"
 
 createBinarySW :: IO ()
@@ -59,8 +59,8 @@ createPickle p w = BL.writeFile p $ (GZ.compress . encode) w
 
 loadPickle :: String -> IO (Matrix R)
 loadPickle p = do
-    encodeSW <- BL.readFile $ generatePath p ++ ".dat"
-    return $ (decode . GZ.decompress) encodeSW
+    esw <- BL.readFile $ generatePath p ++ ".dat"
+    return $ (decode . GZ.decompress) esw
 
 loadSW :: IO SampleWeight
 loadSW = do
