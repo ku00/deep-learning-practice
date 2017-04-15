@@ -1,5 +1,8 @@
 module Mnist
-    ( loadMnist
+    ( Image
+    , Label
+    , DataSet
+    , loadMnist
     ) where
 
 import Control.Monad
@@ -10,7 +13,9 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Codec.Compression.GZip as GZ (compress, decompress)
 import Data.Binary (encode, decode)
 
-type DataSet = (Matrix R, Vector R)
+type Image = Matrix R
+type Label = Vector R
+type DataSet = (Image, Label)
 
 baseUrl = "http://yann.lecun.com/exdb/mnist"
 keyFiles = [
@@ -45,14 +50,14 @@ downloadMnist (x:xs) = do
     downloadMnist xs
 
 toDoubleList :: BL.ByteString -> [Double]
-toDoubleList = map (read . show . fromEnum) . BL.unpack
+toDoubleList = fmap (read . show . fromEnum) . BL.unpack
 
-loadLabel :: String -> IO (Vector R)
+loadLabel :: String -> IO Label
 loadLabel fileName = do
     contents <- fmap GZ.decompress (BL.readFile $ generatePath fileName)
     return . vector . toDoubleList $ BL.drop 8 contents
 
-loadImg :: String -> IO (Matrix R)
+loadImg :: String -> IO Image
 loadImg fileName = do
     contents <- fmap GZ.decompress (BL.readFile $ generatePath fileName)
     return . matrix imgSize . toDoubleList $ BL.drop 16 contents

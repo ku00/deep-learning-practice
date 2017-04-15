@@ -4,16 +4,17 @@ import ActivationFunction
 import Mnist
 import SampleWeight
 
-predict :: ([Matrix R], [Vector R]) -> Vector R -> Vector R
+predict :: SampleWeight -> Vector R -> Vector R
 predict ([w1,w2,w3],[b1,b2,b3]) x =
     softMax' . (\x'' -> sumInput x'' w3 b3) . sigmoid . (\x' -> sumInput x' w2 b2) . sigmoid $ sumInput x w1 b1
 
-sumInput :: Vector R -> Matrix R -> Vector R -> Vector R
+sumInput :: Vector R -> Weight -> Bias -> Vector R
 sumInput x w b = (x <# w) + b
 
-maxIndexPredict :: ([Matrix R], [Vector R]) -> Matrix R -> Int -> Double
+maxIndexPredict :: SampleWeight -> Image -> Int -> Double
 maxIndexPredict sw i n = fromIntegral . maxIndex $ predict sw (i ! n)
 
+countAccuracy :: Double -> Int -> SampleWeight -> Image -> Label -> Double
 countAccuracy a n sw i l
     | n <= 0    = a
     | otherwise =

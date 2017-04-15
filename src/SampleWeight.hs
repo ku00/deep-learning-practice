@@ -1,5 +1,8 @@
 module SampleWeight
-    ( createBinarySW
+    ( Weight
+    , Bias
+    , SampleWeight
+    , createBinarySW
     , loadSW
     ) where
 
@@ -10,6 +13,10 @@ import qualified Data.ByteString.Lazy as BL
 import qualified Codec.Compression.GZip as GZ (compress, decompress)
 import Data.Binary (encode, decode)
 import Text.Parsec
+
+type Weight = Matrix R
+type Bias = Vector R
+type SampleWeight = ([Weight], [Bias])
 
 assetsDir = "assets"
 weightFiles = [ "sample-weight-w1"
@@ -55,7 +62,7 @@ loadPickle p = do
     encodeSW <- BL.readFile $ generatePath p ++ ".dat"
     return $ (decode . GZ.decompress) encodeSW
 
-loadSW :: IO ([Matrix R], [Vector R])
+loadSW :: IO SampleWeight
 loadSW = do
     sw <- forM weightFiles loadPickle
     let (w,b) = splitAt 3 sw
