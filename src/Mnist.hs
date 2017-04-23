@@ -97,4 +97,4 @@ loadMnist nml = do
     e <- doesFileExist p
     unless e initMnist
 
-    loadPickle p >>= normalizeImg nml
+    normalizeImg nml =<< loadPickle p
